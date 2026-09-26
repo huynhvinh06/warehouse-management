@@ -14,7 +14,7 @@ function Header() {
     >
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          📦 Warehouse Management
+          Quản lý xuất nhập kho InoTrack
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Typography variant="body2">Xin chào, Admin</Typography>
