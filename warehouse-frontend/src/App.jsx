@@ -10,6 +10,7 @@ import Exports from "./pages/Exports";
 import Reports from "./pages/Reports";
 import Categories from "./pages/Categories";
 import Users from "./pages/Users";
+import Inventory from "./pages/Inventory";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/inventory" element={<Inventory />} />
           </Routes>
         </Box>
       </Box>

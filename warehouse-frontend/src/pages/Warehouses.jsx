@@ -16,7 +16,7 @@ function Warehouses() {
   const [warehouses, setWarehouses] = useState([]);
 
   useEffect(() => {
-    fetch("/api/warehouses")
+    fetch("http://localhost:5000/api/warehouses")
       .then((res) => res.json())
       .then((data) => setWarehouses(data))
       .catch((err) => console.error("Lỗi tải kho hàng:", err));
@@ -42,11 +42,11 @@ function Warehouses() {
           </TableHead>
           <TableBody>
             {warehouses.map((w) => (
-              <TableRow key={w.id}>
-                <TableCell>{w.code}</TableCell>
-                <TableCell>{w.name}</TableCell>
-                <TableCell>{w.address}</TableCell>
-                <TableCell>{w.productCount}</TableCell>
+              <TableRow key={w.warehouse_id}>
+                  <TableCell>{w.warehouse_id}</TableCell>
+                  <TableCell>{w.warehouse_name}</TableCell>
+                  <TableCell>{w.address}</TableCell>
+                  <TableCell>{w.productCount}</TableCell>
                 <TableCell>
                   <Button size="small">Sửa</Button>
                 </TableCell>

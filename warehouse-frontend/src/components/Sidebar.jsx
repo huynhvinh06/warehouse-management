@@ -15,6 +15,7 @@ import CallReceivedIcon from "@mui/icons-material/CallReceived";
 import CallMadeIcon from "@mui/icons-material/CallMade";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import PeopleIcon from "@mui/icons-material/People";
+import InventoryIcon from "@mui/icons-material/Inventory";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -29,6 +30,7 @@ const menuItems = [
   { label: "Nhập kho", path: "/imports", icon: <CallReceivedIcon /> },
   { label: "Xuất kho", path: "/exports", icon: <CallMadeIcon /> },
   { label: "Báo cáo", path: "/reports", icon: <AssessmentIcon /> },
+  { label: "Tồn kho", path: "/inventory", icon: <InventoryIcon /> },
 ];
 
 function Sidebar() {

@@ -546,6 +546,139 @@ app.delete("/api/users/:id", async (req, res) => {
         });
     }
 });
+// API đăng nhập
+app.post("/api/login", async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Vui lòng nhập tên đăng nhập và mật khẩu"
+            });
+        }
+
+        const [rows] = await pool.query(
+            `
+            SELECT
+                u.user_id,
+                u.username,
+                u.full_name,
+                u.email,
+                u.phone,
+                u.role_id AS role_id,
+                r.role_name,
+                u.status
+            FROM users u
+            LEFT JOIN roles r
+                ON u.role_id = r.role_id
+            WHERE u.username = ?
+              AND u.password = ?
+            LIMIT 1
+            `,
+            [username, password]
+        );
+
+        if (rows.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: "Tên đăng nhập hoặc mật khẩu không đúng"
+            });
+        }
+
+        const user = rows[0];
+
+        if (Number(user.status) !== 1) {
+            return res.status(403).json({
+                success: false,
+                message: "Tài khoản đã bị khóa"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Đăng nhập thành công",
+            user
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Lỗi máy chủ"
+        });
+    }
+});
+
+// API danh sách kho
+app.get("/api/warehouses", async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT
+                w.warehouse_id,
+                w.warehouse_name,
+                w.address,
+                COUNT(DISTINCT i.product_id) AS productCount
+            FROM warehouses w
+            LEFT JOIN inventory i
+                ON w.warehouse_id = i.warehouse_id
+            WHERE w.status = 1
+            GROUP BY
+                w.warehouse_id,
+                w.warehouse_name,
+                w.address
+            ORDER BY w.warehouse_id ASC
+        `);
+
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Không thể lấy danh sách kho"
+        });
+    }
+});
+// API tồn kho
+app.get("/api/inventory", async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT
+                i.inventory_id,
+                i.warehouse_id,
+                w.warehouse_name,
+                p.product_id,
+                p.product_code,
+                p.product_name,
+                p.unit,
+                i.quantity AS stock,
+                p.min_stock,
+                CASE
+                    WHEN i.quantity = 0 THEN 'Hết hàng'
+                    WHEN i.quantity <= p.min_stock THEN 'Sắp hết'
+                    ELSE 'Đủ hàng'
+                END AS stock_status
+            FROM inventory i
+            INNER JOIN warehouses w
+                ON i.warehouse_id = w.warehouse_id
+            INNER JOIN products p
+                ON i.product_id = p.product_id
+            WHERE w.status = 1
+            ORDER BY i.warehouse_id ASC, p.product_id ASC
+        `);
+
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Không thể lấy dữ liệu tồn kho"
+        });
+    }
+});
 
 app.listen(5000, () => {
     console.log("InoTrack Backend: http://localhost:5000");
