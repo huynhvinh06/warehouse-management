@@ -8,6 +8,8 @@ import Warehouses from "./pages/Warehouses";
 import Imports from "./pages/Imports";
 import Exports from "./pages/Exports";
 import Reports from "./pages/Reports";
+import Categories from "./pages/Categories";
+import Users from "./pages/Users";
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
             <Route path="/imports" element={<Imports />} />
             <Route path="/exports" element={<Exports />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/users" element={<Users />} />
           </Routes>
         </Box>
       </Box>
