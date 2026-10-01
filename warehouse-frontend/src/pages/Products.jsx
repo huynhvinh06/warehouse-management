@@ -22,6 +22,10 @@ function Products() {
   const [products, setProducts] = useState([]);
   const [open, setOpen] = useState(false);
 
+  // null = thêm sản phẩm
+  // có id = sửa sản phẩm
+  const [editingId, setEditingId] = useState(null);
+
   const [form, setForm] = useState({
     product_code: "",
     product_name: "",
@@ -52,21 +56,61 @@ function Products() {
     });
   };
 
-  // Mở form
-  const handleOpen = () => {
+  // Reset form
+  const resetForm = () => {
+    setForm({
+      product_code: "",
+      product_name: "",
+      category_id: 1,
+      unit: "",
+      import_price: "",
+      selling_price: "",
+      min_stock: "",
+    });
+  };
+
+  // Mở form thêm
+  const handleOpenAdd = () => {
+    setEditingId(null);
+    resetForm();
+    setOpen(true);
+  };
+
+  // Mở form sửa
+  const handleOpenEdit = (product) => {
+    setEditingId(product.product_id);
+
+    setForm({
+      product_code: product.product_code,
+      product_name: product.product_name,
+      category_id: product.category_id || 1,
+      unit: product.unit,
+      import_price: product.import_price,
+      selling_price: product.selling_price,
+      min_stock: product.min_stock,
+    });
+
     setOpen(true);
   };
 
   // Đóng form
   const handleClose = () => {
     setOpen(false);
+    setEditingId(null);
+    resetForm();
   };
 
-  // Thêm sản phẩm
+  // Thêm hoặc sửa sản phẩm
   const handleSubmit = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/products", {
-        method: "POST",
+      const url = editingId
+        ? `http://localhost:5000/api/products/${editingId}`
+        : "http://localhost:5000/api/products";
+
+      const method = editingId ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -82,31 +126,55 @@ function Products() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Không thể thêm sản phẩm");
+        throw new Error(
+          data.message ||
+            (editingId
+              ? "Không thể cập nhật sản phẩm"
+              : "Không thể thêm sản phẩm")
+        );
       }
 
-      alert("Thêm sản phẩm thành công!");
+      alert(
+        editingId
+          ? "Cập nhật sản phẩm thành công!"
+          : "Thêm sản phẩm thành công!"
+      );
 
-      setForm({
-        product_code: "",
-        product_name: "",
-        category_id: 1,
-        unit: "",
-        import_price: "",
-        selling_price: "",
-        min_stock: "",
-      });
-
-      setOpen(false);
-
-      // Tải lại danh sách sản phẩm
+      handleClose();
       fetchProducts();
     } catch (error) {
       console.error(error);
       alert(error.message);
     }
   };
+  const handleDelete = async (id) => {
+  const confirmed = window.confirm(
+    "Bạn có chắc chắn muốn xóa sản phẩm này không?"
+  );
 
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/products/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Không thể xóa sản phẩm");
+    }
+
+    alert("Xóa sản phẩm thành công!");
+    fetchProducts();
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
+};
   return (
     <>
       {/* Tiêu đề + nút thêm */}
@@ -119,7 +187,7 @@ function Products() {
       >
         <Typography variant="h4">Sản phẩm</Typography>
 
-        <Button variant="contained" onClick={handleOpen}>
+        <Button variant="contained" onClick={handleOpenAdd}>
           + Thêm sản phẩm
         </Button>
       </Box>
@@ -148,8 +216,21 @@ function Products() {
                 <TableCell>{p.stock}</TableCell>
                 <TableCell>{p.unit}</TableCell>
                 <TableCell>{p.min_stock}</TableCell>
+
                 <TableCell>
-                  <Button size="small">Sửa</Button>
+                  <Button
+                    size="small"
+                    onClick={() => handleOpenEdit(p)}
+                  >
+                    Sửa
+                  </Button>
+                  <Button
+                    size="small"
+                    color="error"
+                    onClick={() => handleDelete(p.product_id)}
+                  >
+                    Xóa
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -157,14 +238,16 @@ function Products() {
         </Table>
       </TableContainer>
 
-      {/* Form thêm sản phẩm */}
+      {/* Form thêm / sửa sản phẩm */}
       <Dialog
         open={open}
         onClose={handleClose}
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Thêm sản phẩm</DialogTitle>
+        <DialogTitle>
+          {editingId ? "Sửa sản phẩm" : "Thêm sản phẩm"}
+        </DialogTitle>
 
         <DialogContent>
           <TextField
@@ -249,7 +332,7 @@ function Products() {
             variant="contained"
             onClick={handleSubmit}
           >
-            Thêm sản phẩm
+            {editingId ? "Cập nhật" : "Thêm sản phẩm"}
           </Button>
         </DialogActions>
       </Dialog>

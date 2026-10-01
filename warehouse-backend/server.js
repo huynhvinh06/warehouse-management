@@ -42,6 +42,7 @@ app.get("/api/products", async (req, res) => {
         p.product_id,
         p.product_code,
         p.product_name,
+        p.category_id,
         c.category_name,
         p.unit,
         p.import_price,
@@ -119,6 +120,98 @@ app.post("/api/products", async (req, res) => {
     }
 });
 
+// Sửa sản phẩm
+app.put("/api/products/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const {
+            product_code,
+            product_name,
+            category_id,
+            unit,
+            import_price,
+            selling_price,
+            min_stock
+        } = req.body;
+
+        const [result] = await pool.query(
+            `
+            UPDATE products
+            SET
+                product_code = ?,
+                product_name = ?,
+                category_id = ?,
+                unit = ?,
+                import_price = ?,
+                selling_price = ?,
+                min_stock = ?
+            WHERE product_id = ?
+            `,
+            [
+                product_code,
+                product_name,
+                category_id,
+                unit,
+                import_price,
+                selling_price,
+                min_stock,
+                id
+            ]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Không tìm thấy sản phẩm"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Cập nhật sản phẩm thành công"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Không thể cập nhật sản phẩm"
+        });
+    }
+});
+// Xóa sản phẩm
+app.delete("/api/products/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [result] = await pool.query(
+            "DELETE FROM products WHERE product_id = ?",
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Không tìm thấy sản phẩm"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Xóa sản phẩm thành công"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Không thể xóa sản phẩm"
+        });
+    }
+});
 
 app.listen(5000, () => {
     console.log("InoTrack Backend: http://localhost:5000");

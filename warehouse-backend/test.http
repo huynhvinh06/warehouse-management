@@ -1,3 +1,11 @@
+### Kiểm tra database
+GET http://localhost:5000/api/test-db
+
+
+### Lấy danh sách sản phẩm
+GET http://localhost:5000/api/products
+
+### Thêm sản phẩm
 POST http://localhost:5000/api/products
 Content-Type: application/json
 
@@ -10,3 +18,18 @@ Content-Type: application/json
     "selling_price": 12000,
     "min_stock": 20
 }
+### Sửa sản phẩm
+PUT http://localhost:5000/api/products/6
+Content-Type: application/json
+
+{
+    "product_code": "SP006",
+    "product_name": "Bánh Oreo vị Chocolate",
+    "category_id": 2,
+    "unit": "Gói",
+    "import_price": 8000,
+    "selling_price": 13000,
+    "min_stock": 20
+}
+### Xóa sản phẩm
+DELETE http://localhost:5000/api/products/7
