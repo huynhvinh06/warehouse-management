@@ -21,7 +21,7 @@ SET @@SESSION.SQL_LOG_BIN= 0;
 -- GTID state at the beginning of the backup 
 --
 
-SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ 'cf2a00c0-b10c-11f1-bdeb-c01803c73186:1-25';
+SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ 'cf2a00c0-b10c-11f1-bdeb-c01803c73186:1-81';
 
 --
 -- Table structure for table `audit_logs`
@@ -39,7 +39,7 @@ CREATE TABLE `audit_logs` (
   PRIMARY KEY (`log_id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `audit_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,6 +48,7 @@ CREATE TABLE `audit_logs` (
 
 LOCK TABLES `audit_logs` WRITE;
 /*!40000 ALTER TABLE `audit_logs` DISABLE KEYS */;
+INSERT INTO `audit_logs` VALUES (1,1,'IMPORT_CREATE','Lập phiếu nhập PN00001 (1 sản phẩm, tổng 70000)','2026-10-02 09:58:19'),(2,1,'LOGIN','Đăng nhập: admin','2026-10-02 22:00:02'),(3,5,'LOGIN','Đăng nhập: nhanvien2','2026-10-02 22:00:33'),(4,2,'LOGIN','Đăng nhập: manager','2026-10-02 22:06:23'),(5,1,'LOGIN','Đăng nhập: admin','2026-10-02 22:11:56'),(6,1,'LOGIN','Đăng nhập: admin','2026-10-02 22:19:36'),(7,1,'LOGIN','Đăng nhập: admin','2026-10-03 18:37:11'),(8,1,'LOGIN','Đăng nhập: admin','2026-10-03 18:40:24'),(9,1,'USER_DELETE','Xóa tài khoản user_id 6','2026-10-03 18:46:24'),(10,3,'LOGIN','Đăng nhập: staff','2026-10-03 18:47:32'),(11,2,'LOGIN','Đăng nhập: manager','2026-10-03 18:48:22'),(12,1,'LOGIN','Đăng nhập: admin','2026-10-03 19:00:12'),(13,1,'LOGIN','Đăng nhập: admin','2026-10-03 23:18:08'),(14,1,'PRODUCT_CREATE','Thêm sản phẩm SP006 - Bàn phím','2026-10-03 23:19:20'),(15,1,'CATEGORY_UPDATE','Sửa danh mục Đồ điện tử','2026-10-03 23:19:50'),(16,1,'LOGIN','Đăng nhập: admin','2026-10-03 23:22:19'),(17,1,'PRODUCT_UPDATE','Sửa sản phẩm SP006 - Bàn phím','2026-10-03 23:22:31'),(18,1,'CATEGORY_CREATE','Thêm danh mục Hàng thủ công','2026-10-03 23:23:00'),(19,1,'PRODUCT_CREATE','Thêm sản phẩm SP007 - Móc khóa thú bông','2026-10-03 23:23:37'),(20,1,'LOGIN','Đăng nhập: admin','2026-10-03 23:30:22'),(21,1,'LOGIN','Đăng nhập: admin','2026-10-03 23:31:30');
 /*!40000 ALTER TABLE `audit_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -64,7 +65,7 @@ CREATE TABLE `categories` (
   `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`category_id`),
   UNIQUE KEY `category_name` (`category_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -73,7 +74,7 @@ CREATE TABLE `categories` (
 
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES (1,'Đồ uống','Các loại nước uống'),(2,'Thực phẩm','Các loại thực phẩm'),(3,'Đồ gia dụng','Các sản phẩm gia dụng');
+INSERT INTO `categories` VALUES (1,'Đồ uống','Các loại nước uống'),(2,'Thực phẩm','Các loại thực phẩm'),(3,'Đồ gia dụng','Các sản phẩm gia dụng'),(6,'Đồ điện tử','đồ điện'),(7,'Hàng thủ công','Các mặc hàng thủ công');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -163,7 +164,7 @@ CREATE TABLE `import_details` (
   CONSTRAINT `import_details_ibfk_1` FOREIGN KEY (`import_id`) REFERENCES `import_receipts` (`import_id`),
   CONSTRAINT `import_details_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`),
   CONSTRAINT `import_details_chk_1` CHECK ((`quantity` > 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -172,6 +173,7 @@ CREATE TABLE `import_details` (
 
 LOCK TABLES `import_details` WRITE;
 /*!40000 ALTER TABLE `import_details` DISABLE KEYS */;
+INSERT INTO `import_details` (`import_detail_id`, `import_id`, `product_id`, `quantity`, `unit_price`) VALUES (1,1,2,10,7000.00);
 /*!40000 ALTER TABLE `import_details` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -200,7 +202,7 @@ CREATE TABLE `import_receipts` (
   CONSTRAINT `import_receipts_ibfk_1` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`),
   CONSTRAINT `import_receipts_ibfk_2` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`warehouse_id`),
   CONSTRAINT `import_receipts_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -209,6 +211,7 @@ CREATE TABLE `import_receipts` (
 
 LOCK TABLES `import_receipts` WRITE;
 /*!40000 ALTER TABLE `import_receipts` DISABLE KEYS */;
+INSERT INTO `import_receipts` VALUES (1,'PN00001',2,1,1,'2026-10-02 09:58:19',70000.00,'APPROVED',NULL);
 /*!40000 ALTER TABLE `import_receipts` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -231,7 +234,7 @@ CREATE TABLE `inventory` (
   CONSTRAINT `inventory_ibfk_1` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`warehouse_id`),
   CONSTRAINT `inventory_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`),
   CONSTRAINT `inventory_chk_1` CHECK ((`quantity` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -240,7 +243,7 @@ CREATE TABLE `inventory` (
 
 LOCK TABLES `inventory` WRITE;
 /*!40000 ALTER TABLE `inventory` DISABLE KEYS */;
-INSERT INTO `inventory` VALUES (1,1,1,100,'2026-09-25 22:52:10'),(2,1,2,80,'2026-09-25 22:52:10'),(3,1,3,50,'2026-09-25 22:52:10'),(4,1,4,120,'2026-09-25 22:52:10'),(5,1,5,40,'2026-09-25 22:52:10');
+INSERT INTO `inventory` VALUES (1,1,1,100,'2026-09-25 22:52:10'),(2,1,2,90,'2026-10-02 09:58:19'),(3,1,3,50,'2026-09-25 22:52:10'),(4,1,4,120,'2026-09-25 22:52:10'),(5,1,5,40,'2026-09-25 22:52:10');
 /*!40000 ALTER TABLE `inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -266,7 +269,7 @@ CREATE TABLE `products` (
   UNIQUE KEY `product_code` (`product_code`),
   KEY `category_id` (`category_id`),
   CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -275,7 +278,7 @@ CREATE TABLE `products` (
 
 LOCK TABLES `products` WRITE;
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
-INSERT INTO `products` VALUES (1,'SP001','Coca Cola',1,'Lon',7000.00,10000.00,20,1,'2026-09-25 22:52:10'),(2,'SP002','Pepsi',1,'Lon',7000.00,10000.00,20,1,'2026-09-25 22:52:10'),(3,'SP003','Sting',1,'Chai',6000.00,9000.00,15,1,'2026-09-25 22:52:10'),(4,'SP004','Mì Hảo Hảo',2,'Gói',3500.00,5000.00,30,1,'2026-09-25 22:52:10'),(5,'SP005','Nước rửa chén',3,'Chai',18000.00,25000.00,10,1,'2026-09-25 22:52:10'),(6,'SP006','Bánh Oreo',2,'Gói',8000.00,12000.00,20,1,'2026-09-25 23:30:51'),(7,'SP007','Milo',1,'Hộp',10000.00,15000.00,20,1,'2026-09-25 23:36:51');
+INSERT INTO `products` VALUES (1,'SP001','Coca Cola',1,'Lon',7000.00,10000.00,20,1,'2026-09-25 22:52:10'),(2,'SP002','Pepsi',1,'Lon',7000.00,10000.00,20,1,'2026-09-25 22:52:10'),(3,'SP003','Sting',1,'Chai',6000.00,9000.00,15,1,'2026-09-25 22:52:10'),(4,'SP004','Mì Hảo Hảo',2,'Gói',3500.00,5000.00,30,1,'2026-09-25 22:52:10'),(5,'SP005','Nước rửa chén',3,'Chai',18000.00,25000.00,10,1,'2026-09-25 22:52:10'),(9,'SP006','Bàn phím',6,'Cái',500000.00,550000.00,100,1,'2026-10-03 23:19:20'),(10,'SP007','Móc khóa thú bông',7,'Cái',10000.00,12000.00,199,1,'2026-10-03 23:23:37');
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -395,7 +398,7 @@ CREATE TABLE `suppliers` (
 
 LOCK TABLES `suppliers` WRITE;
 /*!40000 ALTER TABLE `suppliers` DISABLE KEYS */;
-INSERT INTO `suppliers` VALUES (1,'NCC001','Công ty TNHH ABC','0900000011','abc@gmail.com','Cần Thơ',1),(2,'NCC002','Công ty TNHH XYZ','0900000012','xyz@gmail.com','TP. Hồ Chí Minh',1);
+INSERT INTO `suppliers` VALUES (1,'NCC001','Công ty TNHH ABC','0900000011','abc@gmail.com','Cần Thơ',1),(2,'NCC002','Công ty TNHH ZXY','0900000012','ZXY@gmail.com','TP. Hồ Chí Minh',1);
 /*!40000 ALTER TABLE `suppliers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -420,7 +423,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `username` (`username`),
   KEY `role_id` (`role_id`),
   CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -429,7 +432,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'admin','123456','Quản trị viên','0900000001','admin@inotrack.com',1,1,'2026-09-25 22:52:10'),(2,'manager','123456','Nguyễn Văn Quản','0900000002','manager@inotrack.com',2,1,'2026-09-25 22:52:10'),(3,'staff','123456','Trần Văn Thủ','0900000003','staff@inotrack.com',3,1,'2026-09-25 22:52:10');
+INSERT INTO `users` VALUES (1,'admin','scrypt$a2dafcb8b776fac48f7e093e79e2bbb2$c101cfb824ebf6deebecf2746b94e8f1e7f2cc58294761e79874bf7673d03fd4310d1a6d59a08d42c792b92f11c4bc450bdc0ba3a64774b771944a106d871d4f','Quản trị viên','0900000001','admin@inotrack.com',1,1,'2026-09-25 22:52:10'),(2,'manager','scrypt$6f29268f700bb1d301efd6613f2c16ac$426b59dddd420275ba7471f1bec1b0bc7b988f1738f15ea39a6b220f8d075081f1433d1255a2eef1a69dca54d623ea2fac5bd4908186a5b41e1d31f0ac92729f','Nguyễn Văn Quản','0900000002','manager@inotrack.com',2,1,'2026-09-25 22:52:10'),(3,'staff','scrypt$4a587afca971a6a0988593f98d270b50$3c529e5b66f54ea53c9d3737baa20ccbe4b1dc6208a9c53e36c1523c3f4133bea55186a9bfb8ca1a2c4c1417ff6e29739448c0f9988091658ca56f891fe9c433','Trần Văn Thủ','0900000003','staff@inotrack.com',3,1,'2026-09-25 22:52:10'),(5,'nhanvien2','scrypt$d3edb04d558fb3142225822dd4dc85ff$74708a93834c6af68cf7b9bf010684f22537062aa4df606cecfd82f71e3019eba217f7ca7ba67cfd43fb8685c96f3d55814c1f10e2d7251c4e24951289d0f94e','Vinh','0838644417','vinhhuynh5a2@gmail.com',3,1,'2026-10-01 22:24:42');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -469,4 +472,4 @@ SET @@SESSION.SQL_LOG_BIN = @MYSQLDUMP_TEMP_LOG_BIN;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-09-25 23:58:43
+-- Dump completed on 2026-10-04  0:01:18
