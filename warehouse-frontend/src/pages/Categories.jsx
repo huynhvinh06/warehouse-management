@@ -1,3 +1,4 @@
+import { canEditCatalog } from "../utils/api";
 import { useEffect, useState } from "react";
 import {
   Typography,
@@ -18,6 +19,8 @@ import {
 } from "@mui/material";
 
 function Categories() {
+  const canEdit = canEditCatalog();
+
   const [categories, setCategories] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -163,12 +166,14 @@ function Categories() {
           Danh mục
         </Typography>
 
-        <Button
+        {canEdit && (
+          <Button
           variant="contained"
           onClick={handleOpenAdd}
         >
           + Thêm danh mục
         </Button>
+        )}
       </Box>
 
       {/* Bảng danh mục */}
@@ -179,7 +184,7 @@ function Categories() {
               <TableCell>Mã danh mục</TableCell>
               <TableCell>Tên danh mục</TableCell>
               <TableCell>Mô tả</TableCell>
-              <TableCell>Hành động</TableCell>
+              {canEdit && <TableCell>Hành động</TableCell>}
             </TableRow>
           </TableHead>
 
@@ -198,6 +203,7 @@ function Categories() {
                   {category.description}
                 </TableCell>
 
+                {canEdit && (
                 <TableCell>
                   <Button
                     size="small"
@@ -218,6 +224,7 @@ function Categories() {
                     Xóa
                   </Button>
                 </TableCell>
+              )}
               </TableRow>
             ))}
           </TableBody>

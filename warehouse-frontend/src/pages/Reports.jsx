@@ -1,5 +1,17 @@
 import { useState } from "react";
-import { Typography, TextField, Button, Box, Grid } from "@mui/material";
+import {
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper,
+  TableContainer,
+} from "@mui/material";
 import StatCard from "../components/StatCard";
 
 function Reports() {
@@ -10,8 +22,11 @@ function Reports() {
     openingStock: 0,
     totalIn: 0,
     totalOut: 0,
+    totalAdjust: 0,
     closingStock: 0,
   });
+
+  const [details, setDetails] = useState([]);
 
   const handleGenerate = async () => {
     if (!fromDate || !toDate) {
@@ -26,7 +41,7 @@ function Reports() {
 
     try {
       const res = await fetch(
-        `/api/reports/inventory?from=${fromDate}&to=${toDate}`
+        `http://localhost:5000/api/reports/inventory?from=${fromDate}&to=${toDate}`
       );
 
       if (!res.ok) {
@@ -39,8 +54,10 @@ function Reports() {
         openingStock: data.openingStock ?? 0,
         totalIn: data.totalIn ?? 0,
         totalOut: data.totalOut ?? 0,
+        totalAdjust: data.totalAdjust ?? 0,
         closingStock: data.closingStock ?? 0,
       });
+      setDetails(data.details ?? []);
     } catch (err) {
       console.error("Lỗi tạo báo cáo:", err);
       alert("Không thể tải báo cáo!");
@@ -97,35 +114,76 @@ function Reports() {
         </Button>
       </Box>
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
+        <Box>
           <StatCard
             label="Tồn đầu kỳ"
+            color="primary"
             value={report.openingStock}
           />
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Box>
           <StatCard
             label="Tổng nhập"
+            color="success"
             value={report.totalIn}
           />
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Box>
           <StatCard
             label="Tổng xuất"
+            color="info"
             value={report.totalOut}
           />
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Box>
+          <StatCard
+            label="Điều chỉnh kiểm kê"
+            color="warning"
+            value={report.totalAdjust}
+          />
+        </Box>
+
+        <Box>
           <StatCard
             label="Tồn cuối kỳ"
+            color="primary"
             value={report.closingStock}
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
+
+      <TableContainer component={Paper} sx={{ mt: 3 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Mã SP</TableCell>
+              <TableCell>Tên sản phẩm</TableCell>
+              <TableCell align="right">Tồn đầu kỳ</TableCell>
+              <TableCell align="right">Nhập</TableCell>
+              <TableCell align="right">Xuất</TableCell>
+              <TableCell align="right">Điều chỉnh KK</TableCell>
+              <TableCell align="right">Tồn cuối kỳ</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {details.map((d) => (
+              <TableRow key={d.product_id}>
+                <TableCell>{d.product_code}</TableCell>
+                <TableCell>{d.product_name}</TableCell>
+                <TableCell align="right">{d.openingStock}</TableCell>
+                <TableCell align="right">{d.totalIn}</TableCell>
+                <TableCell align="right">{d.totalOut}</TableCell>
+                <TableCell align="right">{d.adjustment}</TableCell>
+                <TableCell align="right">{d.closingStock}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </>
   );
 }

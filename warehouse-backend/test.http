@@ -1,12 +1,30 @@
+### Đăng nhập (lấy token dùng cho các request bên dưới)
+# @name login
+POST http://localhost:5000/api/login
+Content-Type: application/json
+
+{
+    "username": "admin",
+    "password": "123456"
+}
+
+@token = {{login.response.body.token}}
+
+### Thủ kho thử tạo sản phẩm -> phải bị từ chối 403
+# (đăng nhập bằng staff, đặt lại @token rồi gửi request POST /api/products)
+
 ### Kiểm tra database
 GET http://localhost:5000/api/test-db
+Authorization: Bearer {{token}}
 
 
 ### Lấy danh sách sản phẩm
 GET http://localhost:5000/api/products
+Authorization: Bearer {{token}}
 
 ### Thêm sản phẩm
 POST http://localhost:5000/api/products
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -20,6 +38,7 @@ Content-Type: application/json
 }
 ### Sửa sản phẩm
 PUT http://localhost:5000/api/products/6
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -33,12 +52,15 @@ Content-Type: application/json
 }
 ### Xóa sản phẩm
 DELETE http://localhost:5000/api/products/7
+Authorization: Bearer {{token}}
 
 
 ### Lấy danh sách danh mục
 GET http://localhost:5000/api/categories
+Authorization: Bearer {{token}}
 ### Thêm danh mục
 POST http://localhost:5000/api/categories
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -47,6 +69,7 @@ Content-Type: application/json
 }
 ### Sửa danh mục
 PUT http://localhost:5000/api/categories/4
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -55,11 +78,14 @@ Content-Type: application/json
 }
 ### Xóa danh mục
 DELETE http://localhost:5000/api/categories/4
+Authorization: Bearer {{token}}
 
 ### Lấy danh sách tài khoản người dùng
 GET http://localhost:5000/api/users
+Authorization: Bearer {{token}}
 ### Thêm tài khoản
 POST http://localhost:5000/api/users
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -73,6 +99,7 @@ Content-Type: application/json
 }
 ### Sửa tài khoản
 PUT http://localhost:5000/api/users/4
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -86,6 +113,7 @@ Content-Type: application/json
 }
 ### Xóa tài khoản
 DELETE http://localhost:5000/api/users/4
+Authorization: Bearer {{token}}
 ### Đăng nhập
 POST http://localhost:5000/api/login
 Content-Type: application/json
@@ -96,5 +124,129 @@ Content-Type: application/json
 }
 ### Lấy danh sách kho hàng
 GET http://localhost:5000/api/warehouses
+Authorization: Bearer {{token}}
 ### Lấy danh sách tồn kho
 GET http://localhost:5000/api/inventory
+Authorization: Bearer {{token}}
+
+### Lấy danh sách nhà cung cấp
+GET http://localhost:5000/api/suppliers
+Authorization: Bearer {{token}}
+
+### Thêm nhà cung cấp
+POST http://localhost:5000/api/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "supplier_code": "NCC003",
+    "supplier_name": "Công ty TNHH DEF",
+    "phone": "0900000013",
+    "email": "def@gmail.com",
+    "address": "Cần Thơ"
+}
+
+### Lập phiếu nhập
+POST http://localhost:5000/api/imports
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "supplier_id": 1,
+    "user_id": 3,
+    "note": "Nhập hàng đợt 1",
+    "items": [
+        { "product_id": 1, "quantity": 50, "unit_price": 7000 },
+        { "product_id": 2, "quantity": 30, "unit_price": 7000 }
+    ]
+}
+
+### Danh sách phiếu nhập
+GET http://localhost:5000/api/imports
+Authorization: Bearer {{token}}
+
+### Chi tiết phiếu nhập
+GET http://localhost:5000/api/imports/1
+Authorization: Bearer {{token}}
+
+### Lập phiếu xuất (thành công)
+POST http://localhost:5000/api/exports
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "user_id": 3,
+    "note": "Bán lẻ - Khách A",
+    "items": [
+        { "product_id": 1, "quantity": 10 }
+    ]
+}
+
+### Lập phiếu xuất (vượt tồn - phải bị từ chối 400)
+POST http://localhost:5000/api/exports
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "user_id": 3,
+    "note": "Test xuất vượt tồn",
+    "items": [
+        { "product_id": 1, "quantity": 999999 }
+    ]
+}
+
+### Danh sách phiếu xuất
+GET http://localhost:5000/api/exports
+Authorization: Bearer {{token}}
+
+### Báo cáo nhập - xuất - tồn
+GET http://localhost:5000/api/reports/inventory?from=2026-09-01&to=2026-10-31
+Authorization: Bearer {{token}}
+
+### Dashboard
+GET http://localhost:5000/api/dashboard/summary
+Authorization: Bearer {{token}}
+
+
+### Nhật ký thao tác (chỉ Admin; thử bằng staff phải ra 403)
+GET http://localhost:5000/api/audit-logs?from=2026-10-01&to=2026-10-31&q=admin&page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Danh sách mã hành động
+GET http://localhost:5000/api/audit-logs/actions
+Authorization: Bearer {{token}}
+
+
+### Bảng kiểm kê (sản phẩm + số lượng hệ thống)
+GET http://localhost:5000/api/stocktakes/sheet
+Authorization: Bearer {{token}}
+
+### Lập phiếu kiểm kê (thực tế khác hệ thống -> tồn được điều chỉnh)
+POST http://localhost:5000/api/stocktakes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "note": "Kiểm kê cuối tháng",
+    "items": [
+        { "product_id": 1, "actual_quantity": 8 },
+        { "product_id": 2, "actual_quantity": 30 }
+    ]
+}
+
+### Thiếu số lượng thực tế -> 400
+POST http://localhost:5000/api/stocktakes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "items": [ { "product_id": 1, "actual_quantity": "" } ]
+}
+
+### Danh sách / chi tiết phiếu kiểm kê
+GET http://localhost:5000/api/stocktakes
+Authorization: Bearer {{token}}
+
+###
+GET http://localhost:5000/api/stocktakes/1
+Authorization: Bearer {{token}}

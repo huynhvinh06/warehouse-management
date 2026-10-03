@@ -1,3 +1,4 @@
+import { canEditCatalog } from "../utils/api";
 import { useEffect, useState } from "react";
 import {
   Typography,
@@ -19,7 +20,10 @@ import {
 } from "@mui/material";
 
 function Products() {
+  const canEdit = canEditCatalog();
+
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [open, setOpen] = useState(false);
 
   // null = thêm sản phẩm
@@ -29,7 +33,7 @@ function Products() {
   const [form, setForm] = useState({
     product_code: "",
     product_name: "",
-    category_id: 1,
+    category_id: "",
     unit: "",
     import_price: "",
     selling_price: "",
@@ -44,8 +48,23 @@ function Products() {
       .catch((err) => console.error("Lỗi tải sản phẩm:", err));
   };
 
+  // Lấy danh sách danh mục từ CSDL (không viết cứng trong code)
+  const fetchCategories = () =>
+    fetch("http://localhost:5000/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        setCategories(list);
+        return list;
+      })
+      .catch((err) => {
+        console.error("Lỗi tải danh mục:", err);
+        return [];
+      });
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   // Thay đổi dữ liệu form
@@ -61,7 +80,7 @@ function Products() {
     setForm({
       product_code: "",
       product_name: "",
-      category_id: 1,
+      category_id: "",
       unit: "",
       import_price: "",
       selling_price: "",
@@ -70,20 +89,25 @@ function Products() {
   };
 
   // Mở form thêm
-  const handleOpenAdd = () => {
+  const handleOpenAdd = async () => {
+    // Tải lại danh mục để thấy ngay danh mục vừa thêm, mặc định chọn danh mục đầu tiên
+    const list = await fetchCategories();
+
     setEditingId(null);
     resetForm();
+    setForm((prev) => ({ ...prev, category_id: list[0]?.category_id ?? "" }));
     setOpen(true);
   };
 
   // Mở form sửa
   const handleOpenEdit = (product) => {
+    fetchCategories();
     setEditingId(product.product_id);
 
     setForm({
       product_code: product.product_code,
       product_name: product.product_name,
-      category_id: product.category_id || 1,
+      category_id: product.category_id ?? "",
       unit: product.unit,
       import_price: product.import_price,
       selling_price: product.selling_price,
@@ -102,6 +126,11 @@ function Products() {
 
   // Thêm hoặc sửa sản phẩm
   const handleSubmit = async () => {
+    if (!form.category_id) {
+      alert("Vui lòng chọn danh mục cho sản phẩm");
+      return;
+    }
+
     try {
       const url = editingId
         ? `http://localhost:5000/api/products/${editingId}`
@@ -187,9 +216,11 @@ function Products() {
       >
         <Typography variant="h4">Sản phẩm</Typography>
 
-        <Button variant="contained" onClick={handleOpenAdd}>
+        {canEdit && (
+          <Button variant="contained" onClick={handleOpenAdd}>
           + Thêm sản phẩm
         </Button>
+        )}
       </Box>
 
       {/* Bảng sản phẩm */}
@@ -203,7 +234,7 @@ function Products() {
               <TableCell>Tồn kho</TableCell>
               <TableCell>Đơn vị tính</TableCell>
               <TableCell>Tồn tối thiểu</TableCell>
-              <TableCell>Hành động</TableCell>
+              {canEdit && <TableCell>Hành động</TableCell>}
             </TableRow>
           </TableHead>
 
@@ -217,6 +248,7 @@ function Products() {
                 <TableCell>{p.unit}</TableCell>
                 <TableCell>{p.min_stock}</TableCell>
 
+                {canEdit && (
                 <TableCell>
                   <Button
                     size="small"
@@ -232,6 +264,7 @@ function Products() {
                     Xóa
                   </Button>
                 </TableCell>
+              )}
               </TableRow>
             ))}
           </TableBody>
@@ -276,10 +309,18 @@ function Products() {
             name="category_id"
             value={form.category_id}
             onChange={handleChange}
+            error={categories.length === 0}
+            helperText={
+              categories.length === 0
+                ? "Chưa có danh mục nào, vui lòng thêm danh mục trước"
+                : ""
+            }
           >
-            <MenuItem value={1}>Đồ uống</MenuItem>
-            <MenuItem value={2}>Thực phẩm</MenuItem>
-            <MenuItem value={3}>Đồ gia dụng</MenuItem>
+            {categories.map((c) => (
+              <MenuItem key={c.category_id} value={c.category_id}>
+                {c.category_name}
+              </MenuItem>
+            ))}
           </TextField>
 
           <TextField

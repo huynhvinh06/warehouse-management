@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const pool = require("./db");
+const { authenticate, authorize, PERMS } = require("./auth");
+const { logAction } = require("./audit");
 
 const app = express();
 
@@ -33,6 +35,12 @@ app.get("/api/test-db", async (req, res) => {
 });
 
 
+
+// Đăng nhập (công khai)
+app.use("/api", require("./routes/auth"));
+
+// Từ đây trở xuống, mọi API đều yêu cầu đăng nhập
+app.use("/api", authenticate);
 
 // API sản phẩm
 app.get("/api/products", async (req, res) => {
@@ -67,7 +75,7 @@ app.get("/api/products", async (req, res) => {
     }
 });
 
-app.post("/api/products", async (req, res) => {
+app.post("/api/products", authorize(...PERMS.CATALOG_WRITE), async (req, res) => {
     try {
         const {
             product_code,
@@ -104,6 +112,7 @@ app.post("/api/products", async (req, res) => {
             ]
         );
 
+        await logAction(req.user.user_id, "PRODUCT_CREATE", `Thêm sản phẩm ${product_code} - ${product_name}`);
         res.status(201).json({
             success: true,
             message: "Thêm sản phẩm thành công",
@@ -121,7 +130,7 @@ app.post("/api/products", async (req, res) => {
 });
 
 // Sửa sản phẩm
-app.put("/api/products/:id", async (req, res) => {
+app.put("/api/products/:id", authorize(...PERMS.CATALOG_WRITE), async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -167,6 +176,7 @@ app.put("/api/products/:id", async (req, res) => {
             });
         }
 
+        await logAction(req.user.user_id, "PRODUCT_UPDATE", `Sửa sản phẩm ${product_code} - ${product_name}`);
         res.json({
             success: true,
             message: "Cập nhật sản phẩm thành công"
@@ -182,7 +192,7 @@ app.put("/api/products/:id", async (req, res) => {
     }
 });
 // Xóa sản phẩm
-app.delete("/api/products/:id", async (req, res) => {
+app.delete("/api/products/:id", authorize(...PERMS.CATALOG_WRITE), async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -198,6 +208,7 @@ app.delete("/api/products/:id", async (req, res) => {
             });
         }
 
+        await logAction(req.user.user_id, "PRODUCT_DELETE", `Xóa sản phẩm id ${id}`);
         res.json({
             success: true,
             message: "Xóa sản phẩm thành công"
@@ -240,7 +251,7 @@ app.get("/api/categories", async (req, res) => {
 
 
 // Thêm danh mục
-app.post("/api/categories", async (req, res) => {
+app.post("/api/categories", authorize(...PERMS.CATALOG_WRITE), async (req, res) => {
     try {
         const {
             category_name,
@@ -269,6 +280,7 @@ app.post("/api/categories", async (req, res) => {
             ]
         );
 
+        await logAction(req.user.user_id, "CATEGORY_CREATE", `Thêm danh mục ${category_name.trim()}`);
         res.status(201).json({
             success: true,
             message: "Thêm danh mục thành công",
@@ -285,7 +297,7 @@ app.post("/api/categories", async (req, res) => {
     }
 });
 // Sửa danh mục
-app.put("/api/categories/:id", async (req, res) => {
+app.put("/api/categories/:id", authorize(...PERMS.CATALOG_WRITE), async (req, res) => {
     try {
         const { id } = req.params;
         const { category_name, description } = req.body;
@@ -317,6 +329,7 @@ app.put("/api/categories/:id", async (req, res) => {
             });
         }
 
+        await logAction(req.user.user_id, "CATEGORY_UPDATE", `Sửa danh mục ${category_name.trim()}`);
         res.json({
             success: true,
             message: "Cập nhật danh mục thành công"
@@ -334,7 +347,7 @@ app.put("/api/categories/:id", async (req, res) => {
 
 
 // Xóa danh mục
-app.delete("/api/categories/:id", async (req, res) => {
+app.delete("/api/categories/:id", authorize(...PERMS.CATALOG_WRITE), async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -370,6 +383,7 @@ app.delete("/api/categories/:id", async (req, res) => {
             });
         }
 
+        await logAction(req.user.user_id, "CATEGORY_DELETE", `Xóa danh mục id ${id}`);
         res.json({
             success: true,
             message: "Xóa danh mục thành công"
@@ -381,232 +395,6 @@ app.delete("/api/categories/:id", async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Không thể xóa danh mục"
-        });
-    }
-});
-
-// API tài khoản - lấy danh sách
-app.get("/api/users", async (req, res) => {
-    try {
-        const [rows] = await pool.query(`
-            SELECT
-                u.user_id,
-                u.username,
-                u.full_name,
-                u.phone,
-                u.email,
-                u.role_id,
-                r.role_name,
-                u.status,
-                u.created_at
-            FROM users u
-            LEFT JOIN roles r
-                ON u.role_id = r.role_id
-            ORDER BY u.user_id ASC
-        `);
-
-        res.json(rows);
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            message: "Không thể lấy danh sách tài khoản"
-        });
-    }
-});
-// API tài khoản - thêm
-app.post("/api/users", async (req, res) => {
-    try {
-        const {
-            username,
-            password,
-            full_name,
-            phone,
-            email,
-            role_id,
-            status
-        } = req.body;
-
-        const [result] = await pool.query(
-            `
-            INSERT INTO users
-            (
-                username,
-                password,
-                full_name,
-                phone,
-                email,
-                role_id,
-                status
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            `,
-            [
-                username,
-                password,
-                full_name,
-                phone,
-                email,
-                role_id,
-                status
-            ]
-        );
-
-        res.status(201).json({
-            success: true,
-            message: "Thêm tài khoản thành công",
-            user_id: result.insertId
-        });
-
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            message: "Không thể thêm tài khoản"
-        });
-    }
-});
-// API tài khoản - sửa
-app.put("/api/users/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const {
-            username,
-            password,
-            full_name,
-            phone,
-            email,
-            role_id,
-            status
-        } = req.body;
-
-        await pool.query(
-            `
-            UPDATE users
-            SET
-                username = ?,
-                password = ?,
-                full_name = ?,
-                phone = ?,
-                email = ?,
-                role_id = ?,
-                status = ?
-            WHERE user_id = ?
-            `,
-            [
-                username,
-                password,
-                full_name,
-                phone,
-                email,
-                role_id,
-                status,
-                id
-            ]
-        );
-
-        res.json({
-            success: true,
-            message: "Cập nhật tài khoản thành công"
-        });
-
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            message: "Không thể cập nhật tài khoản"
-        });
-    }
-});
-// API tài khoản - xóa
-app.delete("/api/users/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        await pool.query(
-            "DELETE FROM users WHERE user_id = ?",
-            [id]
-        );
-
-        res.json({
-            success: true,
-            message: "Xóa tài khoản thành công"
-        });
-
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            message: "Không thể xóa tài khoản"
-        });
-    }
-});
-// API đăng nhập
-app.post("/api/login", async (req, res) => {
-    try {
-        const { username, password } = req.body;
-
-        if (!username || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "Vui lòng nhập tên đăng nhập và mật khẩu"
-            });
-        }
-
-        const [rows] = await pool.query(
-            `
-            SELECT
-                u.user_id,
-                u.username,
-                u.full_name,
-                u.email,
-                u.phone,
-                u.role_id AS role_id,
-                r.role_name,
-                u.status
-            FROM users u
-            LEFT JOIN roles r
-                ON u.role_id = r.role_id
-            WHERE u.username = ?
-              AND u.password = ?
-            LIMIT 1
-            `,
-            [username, password]
-        );
-
-        if (rows.length === 0) {
-            return res.status(401).json({
-                success: false,
-                message: "Tên đăng nhập hoặc mật khẩu không đúng"
-            });
-        }
-
-        const user = rows[0];
-
-        if (Number(user.status) !== 1) {
-            return res.status(403).json({
-                success: false,
-                message: "Tài khoản đã bị khóa"
-            });
-        }
-
-        res.json({
-            success: true,
-            message: "Đăng nhập thành công",
-            user
-        });
-
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            message: "Lỗi máy chủ"
         });
     }
 });
@@ -646,27 +434,26 @@ app.get("/api/inventory", async (req, res) => {
     try {
         const [rows] = await pool.query(`
             SELECT
-                i.inventory_id,
-                i.warehouse_id,
+                w.warehouse_id,
                 w.warehouse_name,
                 p.product_id,
                 p.product_code,
                 p.product_name,
                 p.unit,
-                i.quantity AS stock,
+                COALESCE(i.quantity, 0) AS stock,
                 p.min_stock,
                 CASE
-                    WHEN i.quantity = 0 THEN 'Hết hàng'
-                    WHEN i.quantity <= p.min_stock THEN 'Sắp hết'
+                    WHEN COALESCE(i.quantity, 0) = 0 THEN 'Hết hàng'
+                    WHEN COALESCE(i.quantity, 0) <= p.min_stock THEN 'Sắp hết'
                     ELSE 'Đủ hàng'
                 END AS stock_status
-            FROM inventory i
-            INNER JOIN warehouses w
+            FROM warehouses w
+            CROSS JOIN products p
+            LEFT JOIN inventory i
                 ON i.warehouse_id = w.warehouse_id
-            INNER JOIN products p
-                ON i.product_id = p.product_id
+               AND i.product_id = p.product_id
             WHERE w.status = 1
-            ORDER BY i.warehouse_id ASC, p.product_id ASC
+            ORDER BY w.warehouse_id ASC, p.product_id ASC
         `);
 
         res.json(rows);
@@ -679,6 +466,17 @@ app.get("/api/inventory", async (req, res) => {
         });
     }
 });
+
+// Các route mở rộng
+app.use("/api/users", authorize(...PERMS.ADMIN_ONLY), require("./routes/users"));
+app.use("/api/audit-logs", authorize(...PERMS.ADMIN_ONLY), require("./routes/auditLogs"));
+app.use("/api/suppliers", require("./routes/suppliers"));
+app.use("/api/imports", require("./routes/imports"));
+app.use("/api/exports", require("./routes/exports"));
+app.use("/api/stocktakes", require("./routes/stocktakes"));
+app.use("/api/warehouses", require("./routes/warehouses"));
+app.use("/api/reports", require("./routes/reports"));
+app.use("/api/dashboard", require("./routes/dashboard"));
 
 app.listen(5000, () => {
     console.log("InoTrack Backend: http://localhost:5000");
